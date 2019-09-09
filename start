@@ -1,0 +1,82 @@
+#!/bin/bash
+
+_self="${0##*/}"
+files="$(find . -maxdepth 1 -type f | wc -l)"
+folders="$(find . -maxdepth 1 -type d | wc -l)"
+
+if [ "$((files))" -gt 1 ]; then
+  find . -type f -not -name "$_self" -not -name "clear" -delete
+fi
+if [ "$((folders))" -gt 1 ]; then
+  find . -type d -not -name "." -not -name ".." -not -name ".git" -exec rm -rf "{}" +
+fi
+
+yarn init -y
+mkdir src
+mkdir src/app
+mkdir src/app/controllers
+mkdir src/app/models
+mkdir src/config
+mkdir src/database
+mkdir src/database/migrations
+mkdir src/database/seeds
+touch src/app.js
+touch src/routes.js
+touch src/server.js
+touch src/config/database.js
+touch .editorconfig
+touch .prettierrc
+touch .sequelizerc
+touch nodemon.json
+yarn add eslint sequelize-cli sucrase nodemon prettier eslint-config-prettier eslint-plugin-prettier eslint-plugin-import eslint-config-airbnb-base -D
+yarn add express sequelize jsonwebtoken bcryptjs yup dotenv pg pg-hstore
+yarn eslint --init
+yarn
+
+printf "root = true
+[*]
+indent_style = space
+indent_size = 2
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true" > .editorconfig
+printf '{
+  "singleQuote": true,
+  "trailingComma": "es5"
+}' > .prettierrc
+printf "const { resolve } = require('path');
+module.exports = {
+  config: resolve(__dirname, 'src', 'config', 'database.js'),
+  'models-path': resolve(__dirname, 'src', 'app', 'models'),
+  'migrations-path': resolve(__dirname, 'src', 'database', 'migrations'),
+  'seeders-path': resolve(__dirname, 'src', 'database', 'seeds'),
+};" > .sequelizerc
+printf '{
+  "execMap": {
+    "js": "sucrase-node"
+  }
+}' > nodemon.json
+printf "require('dotenv/config');
+module.exports = {
+  dialect: 'process.env.DIALECT',
+  host: process.env.DB_HOST,
+  username: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
+  define: {
+    timestamps: true,
+    underscored: true,
+    underscoredAll: true,
+  },
+};" > src/config/database.js
+
+
+ sed -i '' '/MIT/a\
+ "scripts": {\
+ "dev": "nodemon src/server.js",\
+ "fix": "yarn eslint --fix src --ext .js"\
+ },\
+ ' package.json
+
+yarn fix
+echo "\n\n\n'yarn dev' - to run\n'yarn fix' - to prettier src/\n\n"

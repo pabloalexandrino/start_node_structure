@@ -1,0 +1,12 @@
+#!/bin/bash
+
+_self="${0##*/}"
+files="$(find . -maxdepth 1 -type f | wc -l)"
+folders="$(find . -maxdepth 1 -type d | wc -l)"
+
+if [ "$((files))" -gt 1 ]; then
+  find . -type f -not -name "$_self" -not -name "start" -delete
+fi
+if [ "$((folders))" -gt 1 ]; then
+  find . -type d -not -name "." -not -name ".." -not -name ".git" -exec rm -rf "{}" +
+fi
